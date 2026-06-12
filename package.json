@@ -1,0 +1,33 @@
+{
+    "name": "event-bus",
+    "version": "1.0.0",
+    "description": "Lightweight, zero-dependency event bus with TypeScript support",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./index.d.ts",
+            "import": "./index.js"
+        }
+    },
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "files": [
+        "index.js",
+        "index.d.ts",
+        "src/"
+    ],
+    "scripts": {
+        "test": "node --test test/"
+    },
+    "keywords": [
+        "event-bus",
+        "events",
+        "emitter",
+        "pubsub",
+        "typed-events"
+    ],
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
