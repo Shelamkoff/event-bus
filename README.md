@@ -1,102 +1,41 @@
-# EventBus
+# @shelamkoff/event-bus
 
-Lightweight, zero-dependency event bus for JavaScript and TypeScript.
+Synchronous, dependency-free event dispatch for browser and Node.js libraries. Handlers run in registration order. A thrown error or rejected Promise from one handler is reported to `console.error` and does not stop the remaining handlers.
 
-## Installation
+## Install
 
 ```bash
-npm install event-bus
+npm install @shelamkoff/event-bus
 ```
 
 ## Usage
 
-```js
-import { EventBus } from 'event-bus'
-
-const bus = new EventBus()
-
-// Subscribe
-const unsubscribe = bus.on('user:login', (user) => {
-    console.log(`${user.name} logged in`)
-})
-
-// Emit (supports multiple arguments)
-bus.emit('user:login', { name: 'Martin' })
-
-// Unsubscribe
-unsubscribe()
-```
-
-### One-time listener
-
-```js
-bus.once('init', (config) => {
-    console.log('Runs once, then auto-removes')
-})
-```
-
-### Debug mode
-
-```js
-const bus = new EventBus({ debug: true })
-
-bus.emit('test', 42)
-// [EventBus] emit: test 42
-```
-
-## TypeScript
-
-The bus accepts an optional generic for typed events:
-
 ```ts
-type Events = {
-    'user:login': [id: string, role: string]
-    'user:logout': []
-    'error': [error: Error]
+import { EventBus } from '@shelamkoff/event-bus'
+
+interface Events {
+  ready: [id: string]
+  close: []
 }
 
-const bus = new EventBus<Events>()
+const events = new EventBus<Events>()
+const unsubscribe = events.on('ready', id => console.log(id))
+events.once('close', () => console.log('closed'))
 
-bus.on('user:login', (id, role) => {
-    // id: string, role: string
-})
-
-bus.emit('user:login', '42', 'admin') // ✓
-bus.emit('user:login', 42)            // ✗ type error
+events.emit('ready', 'document-1')
+unsubscribe()
+events.clear()
 ```
 
-Without a generic, all events and arguments are untyped (`any`).
+`emit()` uses a stable snapshot: adding or removing listeners during dispatch affects the next emission, not the one already in progress. `once()` removes its listener before invoking it, so recursive emissions remain single-shot.
 
 ## API
 
-| Method | Description |
-|---|---|
-| `on(event, handler)` | Subscribe. Returns an unsubscribe function. |
-| `off(event, handler)` | Unsubscribe a specific handler. |
-| `once(event, handler)` | Subscribe once. Auto-removes after first call. |
-| `emit(event, ...args)` | Emit an event with optional arguments. |
-| `clear(event?)` | Remove all listeners, or only for a specific event. |
-| `has(event)` | Check if an event has any listeners. |
+- `on(event, handler)` and `once(event, handler)` return idempotent unsubscribe functions.
+- `off(event, handler)` removes one handler.
+- `emit(event, ...args)` dispatches synchronously.
+- `clear(event?)` clears one event or the complete bus.
+- `has(event)` reports whether an event has listeners.
+- `new EventBus({ debug: true })` logs emissions.
 
-### Error handling
-
-Handler exceptions are caught and logged via `console.error`. They do not break other handlers or the emit loop.
-
-```js
-bus.on('test', () => { throw new Error('boom') })
-bus.on('test', () => console.log('still runs'))
-
-bus.emit('test')
-// [EventBus] Error in handler for "test": Error: boom
-// still runs
-```
-
-## Tests
-
-```bash
-node --test
-```
-
-## License
-
-[MIT](LICENSE)
+The current package version is `1.0.0`. It is distributed as ESM under the MIT License. Its package manifest declares Node.js 20 or newer for Node consumers; browser consumers use the ESM entry through their bundler.

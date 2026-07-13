@@ -1,113 +1,86 @@
 export class EventBus {
-    /** @type {Map<string, Set<Function>>} */
-    #listeners = new Map()
+  /** @type {Map<string, Set<Function>>} */
+  #listeners = new Map()
 
-    /** @type {boolean} */
-    #debug
+  /** @type {boolean} */
+  #debug
 
-    /**
-     * @param {object} [options]
-     * @param {boolean} [options.debug=false]
-     */
-    constructor({ debug = false } = {}) {
-        this.#debug = debug
+  /**
+   * @param {object} [options]
+   * @param {boolean} [options.debug=false]
+   */
+  constructor({ debug = false } = {}) {
+    if (typeof debug !== 'boolean') throw new TypeError('debug must be a boolean')
+    this.#debug = debug
+  }
+
+  /** @returns {() => void} */
+  on(event, handler) {
+    this.#assertEventName(event)
+    if (typeof handler !== 'function') {
+      throw new TypeError(`Handler must be a function, got ${typeof handler}`)
     }
+    if (!this.#listeners.has(event)) this.#listeners.set(event, new Set())
+    this.#listeners.get(event).add(handler)
+    return () => this.off(event, handler)
+  }
 
-    /**
-     * Subscribe to an event. Returns an unsubscribe function.
-     * @param {string} event
-     * @param {Function} handler
-     * @returns {() => void}
-     */
-    on(event, handler) {
-        if (typeof handler !== 'function') {
-            throw new TypeError(`Handler must be a function, got ${typeof handler}`)
-        }
+  off(event, handler) {
+    this.#assertEventName(event)
+    if (typeof handler !== 'function') throw new TypeError('Handler must be a function')
+    const listeners = this.#listeners.get(event)
+    if (!listeners) return
+    listeners.delete(handler)
+    if (listeners.size === 0) this.#listeners.delete(event)
+  }
 
-        if (!this.#listeners.has(event)) {
-            this.#listeners.set(event, new Set())
-        }
-
-        this.#listeners.get(event).add(handler)
-
-        return () => this.off(event, handler)
+  /** @returns {() => void} */
+  once(event, handler) {
+    if (typeof handler !== 'function') {
+      throw new TypeError(`Handler must be a function, got ${typeof handler}`)
     }
-
-    /**
-     * Unsubscribe from an event.
-     * @param {string} event
-     * @param {Function} handler
-     */
-    off(event, handler) {
-        const set = this.#listeners.get(event)
-        if (!set) return
-
-        set.delete(handler)
-
-        if (set.size === 0) {
-            this.#listeners.delete(event)
-        }
+    const wrapper = (...args) => {
+      this.off(event, wrapper)
+      return handler(...args)
     }
+    return this.on(event, wrapper)
+  }
 
-    /**
-     * Subscribe once — handler is removed after first call.
-     * @param {string} event
-     * @param {Function} handler
-     * @returns {() => void}
-     */
-    once(event, handler) {
-        if (typeof handler !== 'function') {
-            throw new TypeError(`Handler must be a function, got ${typeof handler}`)
+  emit(event, ...args) {
+    this.#assertEventName(event)
+    if (this.#debug) console.log(`[EventBus] emit: ${event}`, ...args)
+    const handlers = this.#listeners.get(event)
+    if (!handlers) return
+    for (const handler of [...handlers]) {
+      try {
+        const result = handler(...args)
+        if (result && typeof result.then === 'function') {
+          Promise.resolve(result).catch(error => {
+            console.error(`[EventBus] Error in async handler for "${event}":`, error)
+          })
         }
-
-        const wrapper = (...args) => {
-            this.off(event, wrapper)
-            handler(...args)
-        }
-
-        return this.on(event, wrapper)
+      } catch (error) {
+        console.error(`[EventBus] Error in handler for "${event}":`, error)
+      }
     }
+  }
 
-    /**
-     * Emit an event with optional data.
-     * @param {string} event
-     * @param {...*} args
-     */
-    emit(event, ...args) {
-        if (this.#debug) {
-            console.log(`[EventBus] emit: ${event}`, ...args)
-        }
-
-        const handlers = this.#listeners.get(event)
-        if (!handlers) return
-
-        for (const handler of [...handlers]) {
-            try {
-                handler(...args)
-            } catch (err) {
-                console.error(`[EventBus] Error in handler for "${event}":`, err)
-            }
-        }
+  clear(event) {
+    if (event !== undefined) {
+      this.#assertEventName(event)
+      this.#listeners.delete(event)
     }
+    else this.#listeners.clear()
+  }
 
-    /**
-     * Remove all listeners, optionally for a specific event.
-     * @param {string} [event]
-     */
-    clear(event) {
-        if (event !== undefined) {
-            this.#listeners.delete(event)
-        } else {
-            this.#listeners.clear()
-        }
-    }
+  has(event) {
+    this.#assertEventName(event)
+    return this.#listeners.has(event)
+  }
 
-    /**
-     * Check if an event has any listeners.
-     * @param {string} event
-     * @returns {boolean}
-     */
-    has(event) {
-        return this.#listeners.has(event)
+  #assertEventName(event) {
+    if (typeof event !== 'string' || event.length === 0) {
+      throw new TypeError('Event name must be a non-empty string')
     }
+  }
 }

@@ -1,33 +1,35 @@
 {
-    "name": "event-bus",
-    "version": "1.0.0",
-    "description": "Lightweight, zero-dependency event bus with TypeScript support",
-    "type": "module",
-    "exports": {
-        ".": {
-            "types": "./index.d.ts",
-            "import": "./index.js"
-        }
+  "name": "@shelamkoff/event-bus",
+  "version": "1.0.0",
+  "description": "Small synchronous typed event bus with isolated handlers",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "files": [
-        "index.js",
-        "index.d.ts",
-        "src/"
-    ],
-    "scripts": {
-        "test": "node --test test/"
-    },
-    "keywords": [
-        "event-bus",
-        "events",
-        "emitter",
-        "pubsub",
-        "typed-events"
-    ],
-    "license": "MIT",
-    "engines": {
-        "node": ">=18.0.0"
-    }
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "README.ru.md", "LICENSE"],
+  "scripts": {
+    "build": "node scripts/build-package.mjs",
+    "test": "node --test",
+    "prepublishOnly": "npm test",
+    "prepack": "npm run build"
+  },
+  "keywords": ["event-bus", "events", "typescript", "esm"],
+  "author": "Shelamkoff",
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shelamkoff/event-bus.git"
+  },
+  "homepage": "https://github.com/Shelamkoff/event-bus#readme",
+  "bugs": { "url": "https://github.com/Shelamkoff/event-bus/issues" },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
