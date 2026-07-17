@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EventBus demo</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
+    .panel { padding: 24px; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 14px; }
+    button { padding: 10px 16px; border: 0; border-radius: 9px; background: #4357b4; color: white; cursor: pointer; }
+    pre { min-height: 12rem; padding: 16px; overflow: auto; border-radius: 10px; background: color-mix(in srgb, CanvasText 8%, Canvas); }
+  </style>
+</head>
+<body data-status="running">
+  <h1>@shelamkoff/event-bus</h1>
+  <p>A synchronous event bus with isolated listeners and unsubscribe functions.</p>
+  <div class="panel">
+    <button id="emit" type="button">Emit <code>counter:change</code></button>
+    <pre id="log" aria-live="polite"></pre>
+  </div>
+
+  <script type="module">
+    import { EventBus } from './index.js'
+
+    const bus = new EventBus()
+    const log = document.querySelector('#log')
+    let count = 0
+
+    const unsubscribe = bus.on('counter:change', ({ value }) => {
+      log.textContent += `persistent listener: ${value}\n`
+    })
+
+    bus.once('counter:change', ({ value }) => {
+      log.textContent += `once listener: ${value}\n`
+    })
+
+    document.querySelector('#emit').addEventListener('click', () => {
+      count += 1
+      bus.emit('counter:change', { value: count })
+      if (count === 3) {
+        unsubscribe()
+        log.textContent += 'persistent listener removed\n'
+      }
+    })
+
+    if (!bus.has('counter:change')) throw new Error('EventBus demo failed to register listeners')
+    document.body.dataset.status = 'pass'
+  </script>
+</body>
+</html>
