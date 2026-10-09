@@ -1,10 +1,8 @@
 # @shelamkoff/event-bus
 
-Small, synchronous, dependency-free event bus for browser and Node.js libraries.
+Small, synchronous, dependency-free event bus for browser and Node.js libraries. It dispatches events inside one JavaScript runtime; it does not communicate across processes, workers, or browser tabs.
 
 [Русская версия](./README.ru.md)
-
-Current version: `1.0.0`.
 
 ## Requirements and installation
 
@@ -59,30 +57,43 @@ Event names must be non-empty strings. Invalid event names and non-function hand
 
 ## Dispatch semantics
 
-`emit()` takes a stable snapshot of the current handler set. Adding or removing handlers during an emission affects the next emission, not the one already in progress. `once()` marks its registration as consumed before invoking the callback. Recursive or nested emissions cannot invoke the same one-time registration twice, even when earlier snapshots still contain it.
+`emit()` invokes listeners **synchronously** in registration order and returns `void`. A dispatch takes a stable snapshot: changing subscriptions during the dispatch does not alter that snapshot. In particular, removing a listener does not cancel its invocation if it was already included. Subsequent emissions, including nested ones, use the updated subscription set.
 
-Handler failures are isolated:
+Each `once()` registration is independent. It is marked as consumed **before** its callback runs; recursive and nested emissions cannot invoke the same one-time registration twice.
 
-- a thrown error is reported to `console.error`, then dispatch continues;
-- a returned promise is not awaited because dispatch is synchronous;
-- a rejected returned promise is observed and reported to `console.error` to avoid an unhandled rejection.
-- failures inside `console.error` or the optional debug `console.log` are suppressed to preserve dispatch isolation.
+Errors are isolated per handler:
 
-Use an async coordinator in application code when handlers must be awaited or when their results must be collected.
+- A synchronous exception is caught and reported to `console.error`; the remaining handlers still run.
+- A returned promise or thenable is **not awaited**. Rejections are observed and reported asynchronously to `console.error`, instead of becoming unhandled rejections.
+- If error reporting or `debug: true` logging itself throws, that logging failure is suppressed so it cannot interrupt dispatch.
+
+Reporting is best-effort: there is no error result or configurable error sink. Use an application-level asynchronous coordinator if failures must be observed by the publisher or handler results must be collected.
 
 ## Cleanup
 
 Keep and call the function returned by `on()` or `once()` when a consumer has a shorter lifetime than the bus. A disposer affects only the registration it was created for, even after `off()`, `clear()`, or a subsequent re-subscription. Call `clear()` only when the owner intentionally releases all subscribers.
 
+## Development and verification
+
+From a standalone checkout of the repository:
+
+```bash
+npm ci
+npm run check
+npm pack --dry-run
+```
+
+`npm run check` runs the Node.js tests, strict TypeScript checks, and package build. GitHub Actions runs the same checks on Node.js 20, 22, and 24. The source version is defined in `package.json`; changing repository code does not publish a new npm release.
+
 ## Repository demo
 
-From a standalone checkout of this repository:
+To start the standalone example:
 
 ```bash
 npm run demo
 ```
 
-Open `http://127.0.0.1:4173/`. Set `PORT` to change the port. The demo runs without a parent workspace and is not included in the npm package.
+Open `http://127.0.0.1:4173/` (served from `index.html`). Set `PORT` to change the port. The demo requires no parent workspace and is excluded from the published npm package.
 
 ## Package exports
 
