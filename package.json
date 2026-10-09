@@ -11,26 +11,45 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "README.ru.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "README.ru.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "node scripts/build-package.mjs",
     "demo": "node ../scripts/dev-server.mjs /event-bus/demo.html",
     "test": "node --test",
-    "prepublishOnly": "npm test",
-    "prepack": "npm run build"
+    "prepublishOnly": "npm run check",
+    "prepack": "npm run build",
+    "typecheck": "tsc -p type-tests/tsconfig.json",
+    "check": "npm run test && npm run typecheck && npm run build"
   },
-  "keywords": ["event-bus", "events", "typescript", "esm"],
+  "keywords": [
+    "event-bus",
+    "events",
+    "typescript",
+    "esm"
+  ],
   "author": "Shelamkoff",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shelamkoff/event-bus.git"
   },
   "homepage": "https://github.com/Shelamkoff/event-bus#readme",
-  "bugs": { "url": "https://github.com/Shelamkoff/event-bus/issues" },
+  "bugs": {
+    "url": "https://github.com/Shelamkoff/event-bus/issues"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
   }
 }
