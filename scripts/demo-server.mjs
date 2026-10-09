@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 
 const files = new Map([
-  ['/', ['../demo.html', 'text/html; charset=utf-8']],
-  ['/demo.html', ['../demo.html', 'text/html; charset=utf-8']],
+  ['/', ['../index.html', 'text/html; charset=utf-8']],
+  ['/index.html', ['../index.html', 'text/html; charset=utf-8']],
   ['/index.js', ['../index.js', 'text/javascript; charset=utf-8']],
   ['/src/EventBus.js', ['../src/EventBus.js', 'text/javascript; charset=utf-8']],
 ])

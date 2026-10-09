@@ -26,7 +26,7 @@ test('demo serves its own HTML and ESM sources without exposing other files', { 
 
   for (const [path, expected] of [
     ['/', '<title>EventBus demo</title>'],
-    ['/demo.html', '<title>EventBus demo</title>'],
+    ['/index.html', '<title>EventBus demo</title>'],
     ['/index.js', 'export { EventBus }'],
     ['/src/EventBus.js', 'export class EventBus'],
   ]) {
@@ -36,6 +36,8 @@ test('demo serves its own HTML and ESM sources without exposing other files', { 
     assert.match(await response.text(), new RegExp(expected.replace(/[{}]/g, '\\$&')))
   }
 
-  const hidden = await fetch(new URL('/package.json', origin))
-  assert.equal(hidden.status, 404)
+  for (const path of ['/demo.html', '/package.json', '/src/EventBus.d.ts', '/.git/config']) {
+    const response = await fetch(new URL(path, origin))
+    assert.equal(response.status, 404, path)
+  }
 })
