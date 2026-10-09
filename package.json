@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "node scripts/build-package.mjs",
-    "demo": "node ../scripts/dev-server.mjs /event-bus/demo.html",
+    "demo": "node scripts/demo-server.mjs",
     "test": "node --test",
     "prepublishOnly": "npm run check",
     "prepack": "npm run build",
